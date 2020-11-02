@@ -11,7 +11,7 @@ puts "Дискриминант равен #{d}"
 
 if d < 0
   puts "Корней нет!"
-else
+else 
   x_1 = (-1*b + Math.sqrt(d))/(2*a)
   x_2 = (-1*b - Math.sqrt(d))/(2*a)
   
