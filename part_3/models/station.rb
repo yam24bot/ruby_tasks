@@ -3,7 +3,7 @@
 class Station
   include InstanceCounter
   include Validation
-  @@stations = []
+  @stations = []
   attr_reader :name
 
   validate :name, :presence
@@ -12,12 +12,12 @@ class Station
     @name = name
     @trains = []
     validate!
-    @@stations << self
+    Station.all << self
     register_instance
   end
 
   def self.all
-    @@stations
+    @stations
   end
 
   def get_train(train)

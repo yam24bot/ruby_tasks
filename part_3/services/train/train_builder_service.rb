@@ -2,7 +2,7 @@
 
 class TrainBuilder
   def self.create
-    puts 'What number?'
+    puts 'What number?(in format xxx-xx)'
     @number = gets.chomp
     puts "Train #{@number} already exists" while Train.find(@number)
 

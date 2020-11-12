@@ -7,7 +7,7 @@ class PassengerTrain < Train
     super(number, 'passenger')
   end
 
-  def add_car(_car)
+  def add_car(carriage)
     unless carriage.instance_of?(PassengerCarriage)
       raise 'К пассажирскому поезду можно прицеплять только пассажирские вагоны'
     end

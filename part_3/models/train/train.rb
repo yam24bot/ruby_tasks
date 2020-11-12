@@ -9,7 +9,7 @@ class Train
   attr_reader :type
   attr_writer :trains
 
-  @@trains = {}
+  @trains = {}
   TRAIN_NUMBER = /^[a-z0-9]{3}-?[a-z0-9]{2}$/i.freeze
 
   def initialize(number, type)
@@ -18,16 +18,16 @@ class Train
     @carriages = []
     @speed = 0
     validate!
-    @@trains[number] = self
+    Train.all[number] = self
     register_instance
   end
 
   def self.find(number)
-    @@trains[number]
+    @trains[number]
   end
 
   def self.all
-    @@trains
+    @trains
   end
 
   def stop
@@ -75,10 +75,8 @@ class Train
 
     station_index = route.stations.index(station)
     puts "Now the train is at the station #{station.name}."
-    puts "Previous station - #{route.stations[station_index - 1].name}." if station_index_zero_check(station_index)
-    if station_index_route_size(station_index, route.station.size)
-      puts "Next - #{route.stations[station_index + 1].name}."
-    end
+    puts "Previous station - #{route.stations[station_index - 1].name}." unless station_index.zero?
+    puts "Next - #{route.stations[station_index + 1].name}." if station_index != route.stations.size - 1
   rescue RuntimeError => e
     puts "Error: #{e.message}"
   end
@@ -87,13 +85,5 @@ class Train
     raise 'There are no carriages attached to the train' if @carriages.empty?
 
     @carriages.each(&block)
-  end
-
-  def station_index_zero_check(station_index)
-    station_index
-  end
-
-  def station_index_route_size(station_index, size)
-    station_index != size - 1
   end
 end
