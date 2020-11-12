@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Route
   attr_reader :stations
 
@@ -14,6 +16,7 @@ class Route
     if [stations.first, stations.last].include?(station)
       raise 'The first and last stations on the route must not be deleted!'
     end
+
     stations.delete(station)
     puts "From route #{name} deleted station #{station.name}"
   rescue RuntimeError => e
@@ -26,6 +29,6 @@ class Route
   end
 
   def name
-    stations.first.name + ' - ' + stations.last.name
+    "#{stations.first.name} - #{stations.last.name}"
   end
 end

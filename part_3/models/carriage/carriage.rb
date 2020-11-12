@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Test
 class Carriage
   include Manufacturer
