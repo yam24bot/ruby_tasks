@@ -1,30 +1,44 @@
 # frozen_string_literal: true
 
+CARRIAGE_TYPES = { 'cargo' => CargoCarriage, 'passenger' => PassengerCarriage }.freeze
+
 class CarriageAddon
-  def self.add
-    raise 'First you need to create a train' if Train.all.empty?
+  class << self
+    def add
+      safety = CarriageSafety.new
 
-    puts 'To which? (enter number)'
-    number = gets.chomp
-    train = Train.find(number)
-    raise 'There is no train with this number' if train.nil?
+      safety.check_created_train
 
-    train_type(train.type)
+      enter_train_number
 
-    train.add_carriage(CARRIAGE_TYPES[train.type].new(@size))
-  rescue RuntimeError => e
-    puts "Error: #{e.message}"
-    retry unless Train.all.empty?
-  end
+      safety.check_train_number(@train)
+      carriage_size(@train.type)
 
-  def self.train_type(type)
-    case type
-    when 'passenger'
-      puts 'Enter the number of seats in the car'
-      @size = gets.chomp.to_i
-    when 'cargo'
-      puts 'Enter the volume of the car'
-      @size = gets.chomp.to_f
+      connect_carriage
+    rescue RuntimeError => e
+      puts "Error: #{e.message}"
+      retry unless Train.all.empty?
+    end
+
+    def carriage_size(type)
+      case type
+      when 'passenger'
+        puts 'Enter the number of seats in the car'
+        @size = gets.chomp.to_i
+      when 'cargo'
+        puts 'Enter the volume of the car'
+        @size = gets.chomp.to_f
+      end
+    end
+
+    def enter_train_number
+      puts 'Enter train number'
+      number = gets.chomp
+      @train = Train.find(number)
+    end
+
+    def connect_carriage
+      @train.add_carriage(CARRIAGE_TYPES[@train.type].new(@size))
     end
   end
 end

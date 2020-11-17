@@ -1,5 +1,3 @@
 Documentation:
   Enabled: false
-Lint/MissingSuper:
-  Exclude:
-    - 'models/**/*'
+  

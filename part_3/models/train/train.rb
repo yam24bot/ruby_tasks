@@ -5,9 +5,9 @@ class Train
   include InstanceCounter
   include Validation
 
-  attr_accessor :speed, :number, :carriages, :route, :station
-  attr_reader :type
-  attr_writer :trains
+  attr_accessor :speed, :number, :carriages, :route
+  attr_reader :type, :informer, :safety
+  attr_writer :trains, :current_station
 
   @trains = {}
   TRAIN_NUMBER = /^[a-z0-9]{3}-?[a-z0-9]{2}$/i.freeze
@@ -16,26 +16,25 @@ class Train
     @number = number
     @type = type
     @carriages = []
-    @speed = 0
     validate!
     Train.all[number] = self
+    @informer = TrainInformer.new(self)
+    @safety = TrainSafety.new(self)
     register_instance
   end
 
-  def self.find(number)
-    @trains[number]
-  end
+  class << self
+    def find(number)
+      @trains[number]
+    end
 
-  def self.all
-    @trains
-  end
-
-  def stop
-    self.speed = 0
+    def all
+      @trains
+    end
   end
 
   def add_carriage(carriage)
-    raise 'Do not hitch wagons on the move!' unless speed.zero?
+    safety.check_train_speed
 
     carriages << carriage
     puts "To the train #{number} hitched a carriage."
@@ -44,8 +43,8 @@ class Train
   end
 
   def remove_carriage(carriage)
-    raise 'Carriages must not be uncoupled on the move!' unless speed.zero?
-    raise 'There is no such carriage on this train' unless carriages.include?(carriage)
+    safety.check_train_speed
+    safety.check_carriage_presence(carriage)
 
     carriages.delete(carriage)
     puts "From the train #{number} uncoupled the carriage."
@@ -59,13 +58,13 @@ class Train
   end
 
   def go_to(station)
-    raise 'Route not established' if route.nil?
-    raise "Train #{@number} already on station #{@station.name}" if @station == station
-    raise "Station #{station.name} not included in the train #{number} route" unless route.stations.include?(station)
+    safety.check_route_presence
+    safety.check_destination(station)
+    safety.check_destination_presence(station)
 
-    @station&.send_train(self)
-    @station = station
-    station.get_train(self)
+    current_station.send_train(self)
+    self.current_station = station
+    current_station.get_train(self)
   rescue RuntimeError => e
     puts "Error: #{e.message}"
   end
@@ -73,17 +72,41 @@ class Train
   def stations_around
     raise 'Route not set' if route.nil?
 
-    station_index = route.stations.index(station)
-    puts "Now the train is at the station #{station.name}."
-    puts "Previous station - #{route.stations[station_index - 1].name}." unless station_index.zero?
-    puts "Next - #{route.stations[station_index + 1].name}." if station_index != route.stations.size - 1
+    safety.check_route_presence
+    informer.print_current_station
+    informer.print_previous_station
+    informer.print_next_station
   rescue RuntimeError => e
     puts "Error: #{e.message}"
   end
 
   def iterate_carriages(&block)
-    raise 'There are no carriages attached to the train' if @carriages.empty?
-
     @carriages.each(&block)
+  end
+
+  def current_station
+    @current_station ||= NullStation.new
+  end
+
+  def last_station?
+    route.last_station?(current_station)
+  end
+
+  def previous_station
+    route.previous_station(current_station_index)
+  end
+
+  def next_station
+    route.next_station(current_station_index)
+  end
+
+  def first_station?
+    current_station_index.zero?
+  end
+
+  private
+
+  def current_station_index
+    route.station_index(current_station)
   end
 end

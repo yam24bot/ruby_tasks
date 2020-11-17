@@ -2,16 +2,23 @@
 
 class CarriageDestroyer
   def self.destroy
-    raise 'First you need to create a train' if Train.all.empty?
+    safety = CarriageSafety.new
 
-    puts 'From what? (enter number)'
-    number = gets.chomp
-    train = Train.find(number)
-    raise 'There is no train with this number' if train.nil?
-    raise 'This train already has no wagons' if train.carriages.empty?
+    safety.check_created_train
 
-    train.remove_carriage(train.carriages.last)
+    enter_train_number
+
+    safety.check_train_number(@train)
+    safety.check_wagons(@train)
+
+    @train.remove_carriage(@train.carriages.last)
   rescue RuntimeError => e
     puts "Error: #{e.message}"
+  end
+
+  def enter_train_number
+    puts 'Enter train number'
+    number = gets.chomp
+    @train = Train.find(number)
   end
 end

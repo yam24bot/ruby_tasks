@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
+require 'pry'
+require 'delegate'
 require_relative 'modules/instance_counter'
 require_relative 'modules/validation'
 require_relative 'modules/manufacturer'
 require_relative 'models/station'
 require_relative 'models/route'
+require_relative 'models/null_station'
 require_relative 'models/train/train'
 require_relative 'models/carriage/carriage'
 require_relative 'models/train/cargo_train'
@@ -12,16 +15,17 @@ require_relative 'models/carriage/cargo_carriage'
 require_relative 'models/train/passenger_train'
 require_relative 'models/carriage/passenger_carriage'
 require_relative 'services/station/station_builder_service'
+require_relative 'services/station/station_viewer_service'
 require_relative 'services/train/train_builder_service'
+require_relative 'services/train/train_viewer_service'
+require_relative 'services/train/train_mover_service'
+require_relative 'services/train/train_informer'
+require_relative 'services/train/train_safety'
 require_relative 'services/carriage/carriage_addon_service'
 require_relative 'services/carriage/carriage_destroyer_service'
-require_relative 'services/train/train_mover_service'
-require_relative 'services/station/station_viewer_service'
-require_relative 'services/train/train_viewer_service'
 require_relative 'services/carriage/carriage_viewer_service'
 require_relative 'services/carriage/carriage_loader_service'
-
-CARRIAGE_TYPES = { 'cargo' => CargoCarriage, 'passenger' => PassengerCarriage }.freeze
+require_relative 'services/carriage/carriage_safety'
 
 puts %(
   0. Exit

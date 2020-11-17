@@ -10,7 +10,7 @@ class CargoTrain < Train
   def add_carriage(carriage)
     raise 'Only freight wagons can be coupled to a freight train' unless carriage.instance_of?(CargoCarriage)
 
-    super(carriage)
+    super
   rescue RuntimeError => e
     puts "Error: #{e.message}"
   end

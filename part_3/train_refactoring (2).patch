@@ -1,0 +1,295 @@
+diff --git a/part_3/main.rb b/part_3/main.rb
+index 853f744..f120ed8 100644
+--- a/part_3/main.rb
++++ b/part_3/main.rb
+@@ -1,9 +1,11 @@
+ # frozen_string_literal: true
+ 
++require 'delegate'
+ require_relative 'modules/instance_counter'
+ require_relative 'modules/validation'
+ require_relative 'modules/manufacturer'
+ require_relative 'models/station'
++require_relative 'models/null_station'
+ require_relative 'models/route'
+ require_relative 'models/train/train'
+ require_relative 'models/carriage/carriage'
+@@ -13,11 +15,13 @@ require_relative 'models/train/passenger_train'
+ require_relative 'models/carriage/passenger_carriage'
+ require_relative 'services/station/station_builder_service'
+ require_relative 'services/train/train_builder_service'
++require_relative 'services/train/train_viewer_service'
++require_relative 'services/train/train_mover_service'
++require_relative 'services/train/train_informer'
++require_relative 'services/train/train_safety'
+ require_relative 'services/carriage/carriage_addon_service'
+ require_relative 'services/carriage/carriage_destroyer_service'
+-require_relative 'services/train/train_mover_service'
+ require_relative 'services/station/station_viewer_service'
+-require_relative 'services/train/train_viewer_service'
+ require_relative 'services/carriage/carriage_viewer_service'
+ require_relative 'services/carriage/carriage_loader_service'
+ 
+diff --git a/part_3/models/null_station.rb b/part_3/models/null_station.rb
+new file mode 100644
+index 0000000..45cdf4b
+--- /dev/null
++++ b/part_3/models/null_station.rb
+@@ -0,0 +1,5 @@
++# frozen_string_literal: true
++
++class NullStation
++  def send_train(_train); end
++end
+diff --git a/part_3/models/route.rb b/part_3/models/route.rb
+index 4409e87..a380bd5 100644
+--- a/part_3/models/route.rb
++++ b/part_3/models/route.rb
+@@ -31,4 +31,20 @@ class Route
+   def name
+     "#{stations.first.name} - #{stations.last.name}"
+   end
++
++  def previous_station(index)
++    stations[index - 1]
++  end
++
++  def next_station(index)
++    stations[index + 1]
++  end
++
++  def last_station?(station)
++    station == stations.last
++  end
++
++  def station_index(station)
++    stations.index(station)
++  end
+ end
+diff --git a/part_3/models/station.rb b/part_3/models/station.rb
+index fd4f26f..06bf05c 100644
+--- a/part_3/models/station.rb
++++ b/part_3/models/station.rb
+@@ -3,7 +3,7 @@
+ class Station
+   include InstanceCounter
+   include Validation
+-  @@stations = []
++  @stations = []
+   attr_reader :name
+ 
+   validate :name, :presence
+@@ -12,12 +12,12 @@ class Station
+     @name = name
+     @trains = []
+     validate!
+-    @@stations << self
++    self.class.all << self
+     register_instance
+   end
+ 
+   def self.all
+-    @@stations
++    @stations
+   end
+ 
+   def get_train(train)
+diff --git a/part_3/models/train/train.rb b/part_3/models/train/train.rb
+index bdd8e09..03e92ff 100644
+--- a/part_3/models/train/train.rb
++++ b/part_3/models/train/train.rb
+@@ -5,11 +5,11 @@ class Train
+   include InstanceCounter
+   include Validation
+ 
+-  attr_accessor :speed, :number, :carriages, :route, :station
+-  attr_reader :type
+-  attr_writer :trains
++  attr_accessor :speed, :number, :carriages, :route
++  attr_reader :type, :informer, :safety
++  attr_writer :trains, :current_station
+ 
+-  @@trains = {}
++  @trains = {}
+   TRAIN_NUMBER = /^[a-z0-9]{3}-?[a-z0-9]{2}$/i.freeze
+ 
+   def initialize(number, type)
+@@ -18,16 +18,20 @@ class Train
+     @carriages = []
+     @speed = 0
+     validate!
+-    @@trains[number] = self
++    Train.all[number] = self
++    @informer = TrainInformer.new(self)
++    @safety = TrainSafety.new(self)
+     register_instance
+   end
+ 
+-  def self.find(number)
+-    @@trains[number]
+-  end
++  class << self
++    def find(number)
++      all[number]
++    end
+ 
+-  def self.all
+-    @@trains
++    def all
++      @trains
++    end
+   end
+ 
+   def stop
+@@ -35,8 +39,7 @@ class Train
+   end
+ 
+   def add_carriage(carriage)
+-    raise 'Do not hitch wagons on the move!' unless speed.zero?
+-
++    safety.check_train_speed
+     carriages << carriage
+     puts "To the train #{number} hitched a carriage."
+   rescue RuntimeError => e
+@@ -44,9 +47,8 @@ class Train
+   end
+ 
+   def remove_carriage(carriage)
+-    raise 'Carriages must not be uncoupled on the move!' unless speed.zero?
+-    raise 'There is no such carriage on this train' unless carriages.include?(carriage)
+-
++    safety.check_train_speed
++    safety.check_carriage_presence(carriage)
+     carriages.delete(carriage)
+     puts "From the train #{number} uncoupled the carriage."
+   rescue RuntimeError => e
+@@ -59,41 +61,53 @@ class Train
+   end
+ 
+   def go_to(station)
+-    raise 'Route not established' if route.nil?
+-    raise "Train #{@number} already on station #{@station.name}" if @station == station
+-    raise "Station #{station.name} not included in the train #{number} route" unless route.stations.include?(station)
++    safety.check_route_presence
++    safety.check_destination(station)
++    safety.check_destination_presence(station)
+ 
+-    @station&.send_train(self)
+-    @station = station
+-    station.get_train(self)
++    current_station.send_train(self)
++    self.current_station = station
++    current_station.get_train(self)
+   rescue RuntimeError => e
+     puts "Error: #{e.message}"
+   end
+ 
+   def stations_around
+-    raise 'Route not set' if route.nil?
+-
+-    station_index = route.stations.index(station)
+-    puts "Now the train is at the station #{station.name}."
+-    puts "Previous station - #{route.stations[station_index - 1].name}." if station_index_zero_check(station_index)
+-    if station_index_route_size(station_index, route.station.size)
+-      puts "Next - #{route.stations[station_index + 1].name}."
+-    end
++    safety.check_route_presence
++    informer.print_current_station
++    informer.print_previous_station
++    informer.print_next_station
+   rescue RuntimeError => e
+     puts "Error: #{e.message}"
+   end
+ 
+   def iterate_carriages(&block)
+-    raise 'There are no carriages attached to the train' if @carriages.empty?
++    carriages.each(&block)
++  end
+ 
+-    @carriages.each(&block)
++  def current_station
++    @current_station ||= NullStation.new
+   end
+ 
+-  def station_index_zero_check(station_index)
+-    station_index
++  def last_station?
++    route.last_station?(current_station)
+   end
+ 
+-  def station_index_route_size(station_index, size)
+-    station_index != size - 1
++  def previous_station
++    route.previous_station(current_station_index)
++  end
++
++  def next_station
++    route.next_station(current_station_index)
++  end
++
++  def first_station?
++    current_station_index.zero?
++  end
++
++  private
++
++  def current_station_index
++    route.station_index(current_station)
+   end
+ end
+diff --git a/part_3/services/train/train_informer.rb b/part_3/services/train/train_informer.rb
+new file mode 100644
+index 0000000..29be27d
+--- /dev/null
++++ b/part_3/services/train/train_informer.rb
+@@ -0,0 +1,19 @@
++# frozen_string_literal: true
++
++class TrainInformer < SimpleDelegator
++  def print_previous_station
++    return if first_station?
++
++    puts "Previous station - #{previous_station.name}."
++  end
++
++  def print_next_station
++    return if last_station?
++
++    puts "Next - #{next_station.name}."
++  end
++
++  def print_current_station
++    puts "Now the train is at the station #{current_station.name}."
++  end
++end
+diff --git a/part_3/services/train/train_safety.rb b/part_3/services/train/train_safety.rb
+new file mode 100644
+index 0000000..79bd67a
+--- /dev/null
++++ b/part_3/services/train/train_safety.rb
+@@ -0,0 +1,25 @@
++# frozen_string_literal: true
++
++class TrainSafety < SimpleDelegator
++  def check_train_speed
++    raise 'The train is moving!' if speed.positive?
++  end
++
++  def check_carriage_presence(carriage)
++    raise 'There is no such carriage on this train' unless carriages.include?(carriage)
++  end
++
++  def check_destination_presence(station)
++    return if route.stations.include?(station)
++
++    raise "Station #{station.name} not included in the train #{number} route"
++  end
++
++  def check_destination(station)
++    raise "Train #{number} already on station #{current_station.name}" if current_station == station
++  end
++
++  def check_route_presence
++    raise 'Route not established' if train.route.nil?
++  end
++end

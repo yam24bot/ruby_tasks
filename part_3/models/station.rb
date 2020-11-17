@@ -12,7 +12,7 @@ class Station
     @name = name
     @trains = []
     validate!
-    Station.all << self
+    self.class.all << self
     register_instance
   end
 

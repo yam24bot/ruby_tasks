@@ -4,6 +4,7 @@ class PassengerCarriage < Carriage
   attr_reader :filled
 
   def initialize(seats_count)
+    super()
     @seats_count = seats_count
     @filled = 0
   end

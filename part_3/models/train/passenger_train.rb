@@ -12,7 +12,7 @@ class PassengerTrain < Train
       raise 'К пассажирскому поезду можно прицеплять только пассажирские вагоны'
     end
 
-    super(carriage)
+    super
   rescue RuntimeError => e
     puts "Ошибка: #{e.message}"
   end

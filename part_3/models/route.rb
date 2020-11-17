@@ -31,4 +31,20 @@ class Route
   def name
     "#{stations.first.name} - #{stations.last.name}"
   end
+
+  def previous_station(index)
+    stations[index - 1]
+  end
+
+  def next_station(index)
+    stations[index + 1]
+  end
+
+  def last_station?(station)
+    station == stations.last
+  end
+
+  def station_index(station)
+    stations.index(station)
+  end
 end

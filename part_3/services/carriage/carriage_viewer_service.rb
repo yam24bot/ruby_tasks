@@ -1,23 +1,31 @@
 # frozen_string_literal: true
 
 class CarriageViewer
-  def self.list
-    raise 'First you need to create a train' if Train.all.empty?
+  class << self
+    def list
+      safety = CarriageSafety.new
 
-    enter_train_number
-    raise 'There is no train with this number' if @train.nil?
+      safety.check_created_train
 
-    carriage_number = 0
-    @train.iterate_carriages do |carriage|
-      puts "№#{carriage_number += 1} #{@train.type} free #{carriage.free}, busy #{carriage.filled}"
+      enter_train_number
+      safety.check_train_number(@train)
+
+      carriage_output
+    rescue RuntimeError => e
+      puts "Error: #{e.message}"
     end
-  rescue RuntimeError => e
-    puts "Error: #{e.message}"
-  end
 
-  def self.enter_train_number
-    puts 'Enter train number'
-    number = gets.chomp
-    @train = Train.find(number)
+    def enter_train_number
+      puts 'Enter train number'
+      number = gets.chomp
+      @train = Train.find(number)
+    end
+
+    def carriage_output
+      carriage_number = 0
+      @train.iterate_carriages do |carriage|
+        puts "№#{carriage_number += 1} #{@train.type} free #{carriage.free}, busy #{carriage.filled}"
+      end
+    end
   end
 end

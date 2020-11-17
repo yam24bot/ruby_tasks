@@ -1,0 +1,1039 @@
+From 00f189aed7fe2ad5da6e5389d5306a2f30733ba2 Mon Sep 17 00:00:00 2001
+From: Danil <dkdottk@gmail.com>
+Date: Thu, 12 Nov 2020 13:28:32 +0200
+Subject: [PATCH] Rubocop fix 2
+
+---
+ part_3/0001-Rubocop-fixes.patch               | 903 ++++++++++++++++++
+ part_3/models/station.rb                      |   6 +-
+ part_3/models/train/passenger_train.rb        |   2 +-
+ part_3/models/train/train.rb                  |  22 +-
+ .../services/train/train_builder_service.rb   |   2 +-
+ 5 files changed, 914 insertions(+), 21 deletions(-)
+ create mode 100644 part_3/0001-Rubocop-fixes.patch
+
+diff --git a/part_3/0001-Rubocop-fixes.patch b/part_3/0001-Rubocop-fixes.patch
+new file mode 100644
+index 0000000..8ad47fe
+--- /dev/null
++++ b/part_3/0001-Rubocop-fixes.patch
+@@ -0,0 +1,903 @@
++From a87dca08043abf17938e1b2f4c83d8e7b13c05cd Mon Sep 17 00:00:00 2001
++From: Danil <dkdottk@gmail.com>
++Date: Thu, 12 Nov 2020 04:11:27 +0200
++Subject: [PATCH] Rubocop fixes
++
++---
++ part_3/.rubocop.yml                           |   5 +
++ part_3/Gemfile                                |   4 +
++ part_3/Gemfile.lock                           |  32 ++++
++ part_3/main.rb                                | 168 +++---------------
++ part_3/models/carriage/cargo_carriage.rb      |   3 +
++ part_3/models/carriage/carriage.rb            |   2 +
++ part_3/models/carriage/passenger_carriage.rb  |   3 +
++ part_3/models/route.rb                        |   5 +-
++ part_3/models/station.rb                      |  10 +-
++ part_3/models/train/cargo_train.rb            |   7 +-
++ part_3/models/train/passenger_train.rb        |   5 +-
++ part_3/models/train/train.rb                  |  36 ++--
++ part_3/modules/accessors.rb                   |   7 +-
++ part_3/modules/instance_counter.rb            |   2 +
++ part_3/modules/manufacturer.rb                |   2 +
++ part_3/modules/validation.rb                  |  10 +-
++ .../carriage/carriage_addon_service.rb        |  30 ++++
++ .../carriage/carriage_destroyer_service.rb    |  17 ++
++ .../carriage/carriage_loader_service.rb       |  39 ++++
++ .../carriage/carriage_viewer_service.rb       |  23 +++
++ .../station/station_builder_service.rb        |  10 ++
++ .../station/station_viewer_service.rb         |  12 ++
++ .../services/train/train_builder_service.rb   |  29 +++
++ part_3/services/train/train_mover_service.rb  |  30 ++++
++ part_3/services/train/train_viewer_service.rb |  16 ++
++ 25 files changed, 336 insertions(+), 171 deletions(-)
++ create mode 100644 part_3/.rubocop.yml
++ create mode 100644 part_3/Gemfile
++ create mode 100644 part_3/Gemfile.lock
++ create mode 100644 part_3/services/carriage/carriage_addon_service.rb
++ create mode 100644 part_3/services/carriage/carriage_destroyer_service.rb
++ create mode 100644 part_3/services/carriage/carriage_loader_service.rb
++ create mode 100644 part_3/services/carriage/carriage_viewer_service.rb
++ create mode 100644 part_3/services/station/station_builder_service.rb
++ create mode 100644 part_3/services/station/station_viewer_service.rb
++ create mode 100644 part_3/services/train/train_builder_service.rb
++ create mode 100644 part_3/services/train/train_mover_service.rb
++ create mode 100644 part_3/services/train/train_viewer_service.rb
++
++diff --git a/part_3/.rubocop.yml b/part_3/.rubocop.yml
++new file mode 100644
++index 0000000..5478bf1
++--- /dev/null
+++++ b/part_3/.rubocop.yml
++@@ -0,0 +1,5 @@
+++Documentation:
+++  Enabled: false
+++Lint/MissingSuper:
+++  Exclude:
+++    - 'models/**/*'
++\ No newline at end of file
++diff --git a/part_3/Gemfile b/part_3/Gemfile
++new file mode 100644
++index 0000000..999d050
++--- /dev/null
+++++ b/part_3/Gemfile
++@@ -0,0 +1,4 @@
+++# frozen_string_literal: true
+++
+++source 'https://rubygems.org'
+++gem 'rubocop'
++diff --git a/part_3/Gemfile.lock b/part_3/Gemfile.lock
++new file mode 100644
++index 0000000..0bdd0b8
++--- /dev/null
+++++ b/part_3/Gemfile.lock
++@@ -0,0 +1,32 @@
+++GEM
+++  remote: https://rubygems.org/
+++  specs:
+++    ast (2.4.1)
+++    parallel (1.20.0)
+++    parser (2.7.2.0)
+++      ast (~> 2.4.1)
+++    rainbow (3.0.0)
+++    regexp_parser (1.8.2)
+++    rexml (3.2.4)
+++    rubocop (1.2.0)
+++      parallel (~> 1.10)
+++      parser (>= 2.7.1.5)
+++      rainbow (>= 2.2.2, < 4.0)
+++      regexp_parser (>= 1.8)
+++      rexml
+++      rubocop-ast (>= 1.0.1)
+++      ruby-progressbar (~> 1.7)
+++      unicode-display_width (>= 1.4.0, < 2.0)
+++    rubocop-ast (1.1.1)
+++      parser (>= 2.7.1.5)
+++    ruby-progressbar (1.10.1)
+++    unicode-display_width (1.7.0)
+++
+++PLATFORMS
+++  ruby
+++
+++DEPENDENCIES
+++  rubocop
+++
+++BUNDLED WITH
+++   2.1.4
++diff --git a/part_3/main.rb b/part_3/main.rb
++index 8ca4f29..853f744 100644
++--- a/part_3/main.rb
+++++ b/part_3/main.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ require_relative 'modules/instance_counter'
++ require_relative 'modules/validation'
++ require_relative 'modules/manufacturer'
++@@ -9,138 +11,17 @@ require_relative 'models/train/cargo_train'
++ require_relative 'models/carriage/cargo_carriage'
++ require_relative 'models/train/passenger_train'
++ require_relative 'models/carriage/passenger_carriage'
+++require_relative 'services/station/station_builder_service'
+++require_relative 'services/train/train_builder_service'
+++require_relative 'services/carriage/carriage_addon_service'
+++require_relative 'services/carriage/carriage_destroyer_service'
+++require_relative 'services/train/train_mover_service'
+++require_relative 'services/station/station_viewer_service'
+++require_relative 'services/train/train_viewer_service'
+++require_relative 'services/carriage/carriage_viewer_service'
+++require_relative 'services/carriage/carriage_loader_service'
++ 
++-CARRIAGE_TYPES = { 'cargo' => CargoCarriage, 'passenger' => PassengerCarriage }.  
++-
++-def create_station
++-  puts 'What is the name?'
++-  name = gets.chomp
++-  Station.new(name)
++-  puts "Построена станция #{name}"
++-rescue RuntimeError => e
++-  puts "Ошибка: #{e.message}"
++-  retry
++-end
++-
++-def create_train
++-  puts 'What number?'
++-  number = gets.chomp
++-  raise "Train #{number} already exists" unless Train.find(number).nil?
++-
++-  puts '1 - passenger, 2 - cargo'
++-  choice = gets.chomp.to_i
++-  raise 'The train is not created. Should have entered 1 or 2' unless [1, 2].include?(choice)
++-
++-  case choice
++-  when 1
++-    PassengerTrain.new(number)
++-    puts "Passenger train created #{number}"
++-  when 2
++-    CargoTrain.new(number)
++-    puts "Freight train created #{number}"
++-  end
++-rescue RuntimeError => e
++-  puts "Error: #{e.message}"
++-  retry
++-end
++-
++-def add_carriage
++-  raise 'First you need to create a train' if Train.all.empty?
++-  puts 'To which? (enter number)'
++-  number = gets.chomp
++-  train = Train.find(number)
++-  raise 'There is no train with this number' if train.nil?
++-  if train.type == 'passenger'
++-    puts 'Enter the number of seats in the car'
++-    size = gets.chomp.to_f
++-  elsif train.type == 'cargo'
++-    puts 'Enter the volume of the car'
++-    size = gets.chomp.to_i
++-  end
++-  train.add_carriage(CARRIAGE_TYPES[train.type].new(size))
++-rescue RuntimeError => e
++-  puts "Error: #{e.message}"
++-  retry unless Train.all.empty?
++-end
++-
++-def remove_carriage
++-  raise 'First you need to create a train' if Train.all.empty?
++-  puts 'From what? (enter number)'
++-  number = gets.chomp
++-  train = Train.find(number)
++-  raise 'There is no train with this number' if train.nil?
++-  raise 'This train already has no wagons' if train.carriages.empty?
++-  train.remove_carriage(train.carriages.last)
++-rescue RuntimeError => e
++-  puts "Error: #{e.message}"
++-end
++-
++-def train_to_station
++-  raise 'First you need to create a train' if Train.all.empty?
++-  raise 'First you need to create a station' if Station.all.empty?
++-  puts 'Which train? (enter number)'
++-  number = gets.chomp
++-  train = Train.find(number)
++-  raise 'There is no train with this number' if train.nil?
++-  puts 'Which station? (name)'
++-  name = gets.chomp
++-  station = Station.all.detect { |stn| stn.name == name }
++-  raise 'There is no such station' if station.nil?
++-  station.get_train(train)
++-rescue RuntimeError => e
++-  puts "Error: #{e.message}"
++-end
++-
++-def stations_list
++-  raise 'No stations created yet' if Station.instances.nil?
++-  puts 'List of stations:'
++-  Station.all.each { |stn| puts stn.name }
++-rescue RuntimeError => e
++-  puts "Error: #{e.message}"
++-end
++-
++-def trains_list
++-  raise 'First you need to create a station' if Station.all.empty?
++-  puts 'Which one? (name)'
++-  name = gets.chomp
++-  station = Station.all.detect { |station| station.name == name }
++-  raise 'There is no such station' if station.nil?
++-  station.iterate_trains { |train| puts "№#{train.number} #{train.type} wagons #{train.carriages.count}" }
++-rescue RuntimeError => e
++-  puts "Error: #{e.message}"
++-end
++-
++-def carriages_list
++-  raise 'First you need to create a train' if Train.all.empty?
++-  puts 'Enter train number'
++-  number = gets.chomp
++-  train = Train.find(number)
++-  raise 'There is no train with this number' if train.nil?
++-  carriage_number = 0
++-  train.iterate_carriages { |carriage| puts "№#{carriage_number += 1} #{train.type} free #{carriage.free}, busy #{carriage.filled}" }
++-rescue RuntimeError => e
++-  puts "Error: #{e.message}"
++-end
++-
++-def load_carriage
++-  raise 'First you need to create a train' if Train.all.empty?
++-  puts 'Enter train number'
++-  number = gets.chomp
++-  train = Train.find(number)
++-  raise 'There is no train with this number' if train.nil?
++-  puts 'Enter the carriage number'
++-  carriage_number = gets.chomp.to_i
++-  raise 'There is no such carriage on the train' if carriage_number > train.cariages.size
++-  if train.type == 'cargo'
++-    puts 'Enter cargo volume '
++-    train.carriages[carriage_number - 1].load(gets.chomp.to_f)
++-  elsif train.type == 'passenger'
++-    train.carriages[carriage_number - 1].take_a_seat
++-  end
++-  puts 'Complete'
++-rescue RuntimeError => e
++-  puts "Error: #{e.message}"
++-end
+++CARRIAGE_TYPES = { 'cargo' => CargoCarriage, 'passenger' => PassengerCarriage }.freeze
++ 
++ puts %(
++   0. Exit
++@@ -153,34 +34,33 @@ puts %(
++   7. View the list of trains at the station
++   8. View the list of wagons by the train
++   9. Take a place / volume in the car
++-)
+++
+++  'Enter the command number: '
+++  )
++ 
++ loop do
++-  print 'Enter the command number: '
++   choice = gets.chomp.to_i
++-
++   case choice
++   when 0
++-    puts 'See you later!'
++     break
++   when 1
++-    create_station
+++    StationBuilder.create
++   when 2
++-    create_train
+++    TrainBuilder.create
++   when 3
++-    add_carriage
+++    CarriageAddon.add
++   when 4
++-    remove_carriage
+++    CarriageDestroyer.destroy
++   when 5
++-    train_to_station
+++    TrainMover.move
++   when 6
++-    stations_list
+++    StationViewer.list
++   when 7
++-    trains_list
+++    TrainViewer.list
++   when 8
++-    carriages_list
+++    CarriageViewer.list
++   when 9
++-    load_carriage
+++    CarriageLoader.load
++   else
++     puts 'You must choose one of the proposed options'
++   end
++diff --git a/part_3/models/carriage/cargo_carriage.rb b/part_3/models/carriage/cargo_carriage.rb
++index 36ca764..38d4387 100644
++--- a/part_3/models/carriage/cargo_carriage.rb
+++++ b/part_3/models/carriage/cargo_carriage.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ class CargoCarriage < Carriage
++   attr_reader :filled
++ 
++@@ -8,6 +10,7 @@ class CargoCarriage < Carriage
++ 
++   def load(volume)
++     raise 'Already full' if volume + @filled > @volume
+++
++     @filled += volume
++   end
++ 
++diff --git a/part_3/models/carriage/carriage.rb b/part_3/models/carriage/carriage.rb
++index 9f671c2..92094fb 100644
++--- a/part_3/models/carriage/carriage.rb
+++++ b/part_3/models/carriage/carriage.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ # Test
++ class Carriage
++   include Manufacturer
++diff --git a/part_3/models/carriage/passenger_carriage.rb b/part_3/models/carriage/passenger_carriage.rb
++index e5d3d96..c06e69c 100644
++--- a/part_3/models/carriage/passenger_carriage.rb
+++++ b/part_3/models/carriage/passenger_carriage.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ class PassengerCarriage < Carriage
++   attr_reader :filled
++ 
++@@ -8,6 +10,7 @@ class PassengerCarriage < Carriage
++ 
++   def take_a_seat
++     raise 'No free places' if @filled == @seats_count
+++
++     @filled += 1
++   end
++ 
++diff --git a/part_3/models/route.rb b/part_3/models/route.rb
++index dd9938f..4409e87 100644
++--- a/part_3/models/route.rb
+++++ b/part_3/models/route.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ class Route
++   attr_reader :stations
++ 
++@@ -14,6 +16,7 @@ class Route
++     if [stations.first, stations.last].include?(station)
++       raise 'The first and last stations on the route must not be deleted!'
++     end
+++
++     stations.delete(station)
++     puts "From route #{name} deleted station #{station.name}"
++   rescue RuntimeError => e
++@@ -26,6 +29,6 @@ class Route
++   end
++ 
++   def name
++-    stations.first.name + ' - ' + stations.last.name
+++    "#{stations.first.name} - #{stations.last.name}"
++   end
++ end
++diff --git a/part_3/models/station.rb b/part_3/models/station.rb
++index 97bf3eb..fd4f26f 100644
++--- a/part_3/models/station.rb
+++++ b/part_3/models/station.rb
++@@ -1,8 +1,11 @@
+++# frozen_string_literal: true
+++
++ class Station
++   include InstanceCounter
++   include Validation
++   @@stations = []
++   attr_reader :name
+++
++   validate :name, :presence
++ 
++   def initialize(name)
++@@ -19,6 +22,7 @@ class Station
++ 
++   def get_train(train)
++     raise "Train #{train.number} already on station #{name}" if @trains.include?(train)
+++
++     @trains << train
++     puts "On station #{name} train #{train.number} arrived"
++   end
++@@ -29,9 +33,9 @@ class Station
++     puts "From station #{name} train departed #{train.number}"
++   end
++ 
++-  def iterate_trains
+++  def iterate_trains(&block)
++     raise 'There are no trains at the station' if @trains.empty?
++-    @trains.each { |train| yield(train) }
++-  end
++ 
+++    @trains.each(&block)
+++  end
++ end
++diff --git a/part_3/models/train/cargo_train.rb b/part_3/models/train/cargo_train.rb
++index ea640ae..cd4e004 100644
++--- a/part_3/models/train/cargo_train.rb
+++++ b/part_3/models/train/cargo_train.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ class CargoTrain < Train
++   validate :number, :presence
++   validate :number, :format, TRAIN_NUMBER
++@@ -6,9 +8,8 @@ class CargoTrain < Train
++   end
++ 
++   def add_carriage(carriage)
++-    unless carriage.instance_of?(CargoCarriage)
++-      raise 'Only freight wagons can be coupled to a freight train'
++-    end
+++    raise 'Only freight wagons can be coupled to a freight train' unless carriage.instance_of?(CargoCarriage)
+++
++     super(carriage)
++   rescue RuntimeError => e
++     puts "Error: #{e.message}"
++diff --git a/part_3/models/train/passenger_train.rb b/part_3/models/train/passenger_train.rb
++index 52b9de1..49d7a41 100644
++--- a/part_3/models/train/passenger_train.rb
+++++ b/part_3/models/train/passenger_train.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ class PassengerTrain < Train
++   validate :number, :presence
++   validate :number, :format, TRAIN_NUMBER
++@@ -5,10 +7,11 @@ class PassengerTrain < Train
++     super(number, 'passenger')
++   end
++ 
++-  def add_car(car)
+++  def add_car(_car)
++     unless carriage.instance_of?(PassengerCarriage)
++       raise 'К пассажирскому поезду можно прицеплять только пассажирские вагоны'
++     end
+++
++     super(carriage)
++   rescue RuntimeError => e
++     puts "Ошибка: #{e.message}"
++diff --git a/part_3/models/train/train.rb b/part_3/models/train/train.rb
++index 9c51dfe..bdd8e09 100644
++--- a/part_3/models/train/train.rb
+++++ b/part_3/models/train/train.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ class Train
++   include Manufacturer
++   include InstanceCounter
++@@ -5,9 +7,10 @@ class Train
++ 
++   attr_accessor :speed, :number, :carriages, :route, :station
++   attr_reader :type
+++  attr_writer :trains
+++
++   @@trains = {}
++-  TRAIN_NUMBER = /^[a-z0-9]{3}-?[a-z0-9]{2}$/i
++-  
+++  TRAIN_NUMBER = /^[a-z0-9]{3}-?[a-z0-9]{2}$/i.freeze
++ 
++   def initialize(number, type)
++     @number = number
++@@ -33,6 +36,7 @@ class Train
++ 
++   def add_carriage(carriage)
++     raise 'Do not hitch wagons on the move!' unless speed.zero?
+++
++     carriages << carriage
++     puts "To the train #{number} hitched a carriage."
++   rescue RuntimeError => e
++@@ -41,7 +45,8 @@ class Train
++ 
++   def remove_carriage(carriage)
++     raise 'Carriages must not be uncoupled on the move!' unless speed.zero?
++-    raise 'There is no such carriage on this train' unless cars.include?(car)
+++    raise 'There is no such carriage on this train' unless carriages.include?(carriage)
+++
++     carriages.delete(carriage)
++     puts "From the train #{number} uncoupled the carriage."
++   rescue RuntimeError => e
++@@ -56,10 +61,9 @@ class Train
++   def go_to(station)
++     raise 'Route not established' if route.nil?
++     raise "Train #{@number} already on station #{@station.name}" if @station == station
++-    unless route.stations.include?(station)
++-      raise "Station #{station.name} not included in the train #{number} route"
++-    end
++-    @station.send_train(self) if @station
+++    raise "Station #{station.name} not included in the train #{number} route" unless route.stations.include?(station)
+++
+++    @station&.send_train(self)
++     @station = station
++     station.get_train(self)
++   rescue RuntimeError => e
++@@ -68,18 +72,28 @@ class Train
++ 
++   def stations_around
++     raise 'Route not set' if route.nil?
+++
++     station_index = route.stations.index(station)
++     puts "Now the train is at the station #{station.name}."
++-    puts "Previous station - #{route.stations[station_index - 1].name}." if station_index != 0
++-    if station_index != route.stations.size - 1
+++    puts "Previous station - #{route.stations[station_index - 1].name}." if station_index_zero_check(station_index)
+++    if station_index_route_size(station_index, route.station.size)
++       puts "Next - #{route.stations[station_index + 1].name}."
++     end
++   rescue RuntimeError => e
++     puts "Error: #{e.message}"
++   end
++ 
++-  def iterate_carriages
+++  def iterate_carriages(&block)
++     raise 'There are no carriages attached to the train' if @carriages.empty?
++-    @carriages.each { |carriage| yield(carriage) }
+++
+++    @carriages.each(&block)
+++  end
+++
+++  def station_index_zero_check(station_index)
+++    station_index
+++  end
+++
+++  def station_index_route_size(station_index, size)
+++    station_index != size - 1
++   end
++ end
++diff --git a/part_3/modules/accessors.rb b/part_3/modules/accessors.rb
++index 2faf148..4250085 100644
++--- a/part_3/modules/accessors.rb
+++++ b/part_3/modules/accessors.rb
++@@ -1,10 +1,10 @@
+++# frozen_string_literal: true
+++
++ module Accessors
++   def attr_accessor_with_history(*names)
++     names.each do |name|
++       var_name = "@#{name}".to_sym
++-      #getter
++       define_method(name) { instance_variable_get(var_name) }
++-      #setter
++       define_method("#{name}=".to_sym) do |value|
++         instance_variable_set(var_name, value)
++         @history ||= {}
++@@ -17,11 +17,10 @@ module Accessors
++ 
++   def strong_attr_accessor(name, v_class)
++     var_name = "@#{name}".to_sym
++-    #getter
++     define_method(name) { instance_variable_get(var_name) }
++-    #setter
++     define_method("#{name}=") do |value|
++       raise 'Error! Type mismatch' unless value.is_a?(v_class)
+++
++       instance_variable_set(var_name, value)
++     end
++   end
++diff --git a/part_3/modules/instance_counter.rb b/part_3/modules/instance_counter.rb
++index 97b7479..56f5861 100644
++--- a/part_3/modules/instance_counter.rb
+++++ b/part_3/modules/instance_counter.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ module InstanceCounter
++   def self.included(base)
++     base.extend ClassMethods
++diff --git a/part_3/modules/manufacturer.rb b/part_3/modules/manufacturer.rb
++index 830b274..87633ab 100644
++--- a/part_3/modules/manufacturer.rb
+++++ b/part_3/modules/manufacturer.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ module Manufacturer
++   attr_accessor :manufacturer
++ end
++diff --git a/part_3/modules/validation.rb b/part_3/modules/validation.rb
++index 3b17658..0262237 100644
++--- a/part_3/modules/validation.rb
+++++ b/part_3/modules/validation.rb
++@@ -1,3 +1,5 @@
+++# frozen_string_literal: true
+++
++ module Validation
++   def self.included(base)
++     base.extend ClassMethods
++@@ -16,13 +18,13 @@ module Validation
++ 
++   module InstanceMethods
++     def validate!
++-      self.class.checks.each { |val| self.send val[1].to_sym, instance_variable_get("@#{val[0]}".to_sym), val[2] }
+++      self.class.checks.each { |val| send val[1].to_sym, instance_variable_get("@#{val[0]}".to_sym), val[2] }
++     end
++ 
++     def valid?
++       validate!
++       true
++-    rescue
+++    rescue StandardError
++       false
++     end
++ 
++@@ -37,7 +39,7 @@ module Validation
++     end
++ 
++     def type(value, options)
++-      raise 'Class mismatch' if value.class == options
+++      raise 'Class mismatch' if value.instance_of?(options)
++     end
++   end
++-end
++\ No newline at end of file
+++end
++diff --git a/part_3/services/carriage/carriage_addon_service.rb b/part_3/services/carriage/carriage_addon_service.rb
++new file mode 100644
++index 0000000..7c7017d
++--- /dev/null
+++++ b/part_3/services/carriage/carriage_addon_service.rb
++@@ -0,0 +1,30 @@
+++# frozen_string_literal: true
+++
+++class CarriageAddon
+++  def self.add
+++    raise 'First you need to create a train' if Train.all.empty?
+++
+++    puts 'To which? (enter number)'
+++    number = gets.chomp
+++    train = Train.find(number)
+++    raise 'There is no train with this number' if train.nil?
+++
+++    train_type(train.type)
+++
+++    train.add_carriage(CARRIAGE_TYPES[train.type].new(@size))
+++  rescue RuntimeError => e
+++    puts "Error: #{e.message}"
+++    retry unless Train.all.empty?
+++  end
+++
+++  def self.train_type(type)
+++    case type
+++    when 'passenger'
+++      puts 'Enter the number of seats in the car'
+++      @size = gets.chomp.to_i
+++    when 'cargo'
+++      puts 'Enter the volume of the car'
+++      @size = gets.chomp.to_f
+++    end
+++  end
+++end
++diff --git a/part_3/services/carriage/carriage_destroyer_service.rb b/part_3/services/carriage/carriage_destroyer_service.rb
++new file mode 100644
++index 0000000..fd09d14
++--- /dev/null
+++++ b/part_3/services/carriage/carriage_destroyer_service.rb
++@@ -0,0 +1,17 @@
+++# frozen_string_literal: true
+++
+++class CarriageDestroyer
+++  def self.destroy
+++    raise 'First you need to create a train' if Train.all.empty?
+++
+++    puts 'From what? (enter number)'
+++    number = gets.chomp
+++    train = Train.find(number)
+++    raise 'There is no train with this number' if train.nil?
+++    raise 'This train already has no wagons' if train.carriages.empty?
+++
+++    train.remove_carriage(train.carriages.last)
+++  rescue RuntimeError => e
+++    puts "Error: #{e.message}"
+++  end
+++end
++diff --git a/part_3/services/carriage/carriage_loader_service.rb b/part_3/services/carriage/carriage_loader_service.rb
++new file mode 100644
++index 0000000..74860c1
++--- /dev/null
+++++ b/part_3/services/carriage/carriage_loader_service.rb
++@@ -0,0 +1,39 @@
+++# frozen_string_literal: true
+++
+++class CarriageLoader
+++  def self.load
+++    raise 'First you need to create a train' if Train.all.empty?
+++
+++    enter_train_number
+++    raise 'There is no train with this number' if @train.nil?
+++
+++    enter_carriage_number
+++    raise 'There is no such carriage on the train' if @carriage_number > @train.cariages.size
+++
+++    enter_volume(@train.type)
+++  rescue RuntimeError => e
+++    puts "Error: #{e.message}"
+++  end
+++
+++  def self.enter_volume
+++    case type
+++    when 'cargo'
+++      puts 'Enter cargo volume '
+++      @train.carriages[@carriage_number - 1].load(gets.chomp.to_f)
+++    when 'passenger'
+++      @train.carriages[@carriage_number - 1].take_a_seat
+++    end
+++    puts 'Complete'
+++  end
+++
+++  def self.enter_carriage_number
+++    puts 'Enter the carriage number'
+++    @carriage_number = gets.chomp.to_i
+++  end
+++
+++  def self.enter_train_number
+++    puts 'Enter train number'
+++    number = gets.chomp
+++    @train = Train.find(number)
+++  end
+++end
++diff --git a/part_3/services/carriage/carriage_viewer_service.rb b/part_3/services/carriage/carriage_viewer_service.rb
++new file mode 100644
++index 0000000..fbdda76
++--- /dev/null
+++++ b/part_3/services/carriage/carriage_viewer_service.rb
++@@ -0,0 +1,23 @@
+++# frozen_string_literal: true
+++
+++class CarriageViewer
+++  def self.list
+++    raise 'First you need to create a train' if Train.all.empty?
+++
+++    enter_train_number
+++    raise 'There is no train with this number' if @train.nil?
+++
+++    carriage_number = 0
+++    @train.iterate_carriages do |carriage|
+++      puts "№#{carriage_number += 1} #{@train.type} free #{carriage.free}, busy #{carriage.filled}"
+++    end
+++  rescue RuntimeError => e
+++    puts "Error: #{e.message}"
+++  end
+++
+++  def self.enter_train_number
+++    puts 'Enter train number'
+++    number = gets.chomp
+++    @train = Train.find(number)
+++  end
+++end
++diff --git a/part_3/services/station/station_builder_service.rb b/part_3/services/station/station_builder_service.rb
++new file mode 100644
++index 0000000..59fa878
++--- /dev/null
+++++ b/part_3/services/station/station_builder_service.rb
++@@ -0,0 +1,10 @@
+++# frozen_string_literal: true
+++
+++class StationBuilder
+++  def self.create
+++    puts 'What is the name?'
+++    name = gets.chomp
+++    Station.new(name)
+++    puts "Построена станция #{name}"
+++  end
+++end
++diff --git a/part_3/services/station/station_viewer_service.rb b/part_3/services/station/station_viewer_service.rb
++new file mode 100644
++index 0000000..ab631da
++--- /dev/null
+++++ b/part_3/services/station/station_viewer_service.rb
++@@ -0,0 +1,12 @@
+++# frozen_string_literal: true
+++
+++class StationViewer
+++  def self.list
+++    raise 'No stations created yet' if Station.instances.nil?
+++
+++    puts 'List of stations:'
+++    Station.all.each { |stn| puts stn.name }
+++  rescue RuntimeError => e
+++    puts "Error: #{e.message}"
+++  end
+++end
++diff --git a/part_3/services/train/train_builder_service.rb b/part_3/services/train/train_builder_service.rb
++new file mode 100644
++index 0000000..f585fe5
++--- /dev/null
+++++ b/part_3/services/train/train_builder_service.rb
++@@ -0,0 +1,29 @@
+++# frozen_string_literal: true
+++
+++class TrainBuilder
+++  def self.create
+++    puts 'What number?'
+++    @number = gets.chomp
+++    puts "Train #{@number} already exists" while Train.find(@number)
+++
+++    puts '1 - passenger, 2 - cargo'
+++    choice = gets.chomp.to_i
+++    raise 'The train is not created. Should have entered 1 or 2' unless [1, 2].include?(choice)
+++
+++    output(choice)
+++  rescue RuntimeError => e
+++    puts "Error: #{e.message}"
+++    retry
+++  end
+++
+++  def self.output(choice)
+++    case choice
+++    when 1
+++      PassengerTrain.new(@number)
+++      puts "Passenger train created #{@number}"
+++    when 2
+++      CargoTrain.new(number)
+++      puts "Freight train created #{@number}"
+++    end
+++  end
+++end
++diff --git a/part_3/services/train/train_mover_service.rb b/part_3/services/train/train_mover_service.rb
++new file mode 100644
++index 0000000..e76c9e9
++--- /dev/null
+++++ b/part_3/services/train/train_mover_service.rb
++@@ -0,0 +1,30 @@
+++# frozen_string_literal: true
+++
+++class TrainMover
+++  def self.move
+++    raise 'First you need to create a train' if Train.all.empty?
+++    raise 'First you need to create a station' if Station.all.empty?
+++
+++    check_number
+++    raise 'There is no train with this number' if @train.nil?
+++
+++    check_station
+++    raise 'There is no such station' if @station.nil?
+++
+++    @station.get_train(@train)
+++  rescue RuntimeError => e
+++    puts "Error: #{e.message}"
+++  end
+++
+++  def self.check_number
+++    puts 'Which train? (enter number)'
+++    number = gets.chomp
+++    @train = Train.find(number)
+++  end
+++
+++  def self.check_station
+++    puts 'Which station? (name)'
+++    name = gets.chomp
+++    @station = Station.all.detect { |stn| stn.name == name }
+++  end
+++end
++diff --git a/part_3/services/train/train_viewer_service.rb b/part_3/services/train/train_viewer_service.rb
++new file mode 100644
++index 0000000..6efc9e4
++--- /dev/null
+++++ b/part_3/services/train/train_viewer_service.rb
++@@ -0,0 +1,16 @@
+++# frozen_string_literal: true
+++
+++class TrainViewer
+++  def self.list
+++    raise 'First you need to create a station' if Station.all.empty?
+++
+++    puts 'Which one? (name)'
+++    name = gets.chomp
+++    station = Station.all.detect { |station_detect| station_detect.name == name }
+++    raise 'There is no such station' if station.nil?
+++
+++    station.iterate_trains { |train| puts "№#{train.number} #{train.type} wagons #{train.carriages.count}" }
+++  rescue RuntimeError => e
+++    puts "Error: #{e.message}"
+++  end
+++end
++-- 
++2.25.1
++
+diff --git a/part_3/models/station.rb b/part_3/models/station.rb
+index fd4f26f..5db260e 100644
+--- a/part_3/models/station.rb
++++ b/part_3/models/station.rb
+@@ -3,7 +3,7 @@
+ class Station
+   include InstanceCounter
+   include Validation
+-  @@stations = []
++  @stations = []
+   attr_reader :name
+ 
+   validate :name, :presence
+@@ -12,12 +12,12 @@ class Station
+     @name = name
+     @trains = []
+     validate!
+-    @@stations << self
++    Station.all << self
+     register_instance
+   end
+ 
+   def self.all
+-    @@stations
++    @stations
+   end
+ 
+   def get_train(train)
+diff --git a/part_3/models/train/passenger_train.rb b/part_3/models/train/passenger_train.rb
+index 49d7a41..ec5a2d0 100644
+--- a/part_3/models/train/passenger_train.rb
++++ b/part_3/models/train/passenger_train.rb
+@@ -7,7 +7,7 @@ class PassengerTrain < Train
+     super(number, 'passenger')
+   end
+ 
+-  def add_car(_car)
++  def add_car(carriage)
+     unless carriage.instance_of?(PassengerCarriage)
+       raise 'К пассажирскому поезду можно прицеплять только пассажирские вагоны'
+     end
+diff --git a/part_3/models/train/train.rb b/part_3/models/train/train.rb
+index bdd8e09..a6d63e7 100644
+--- a/part_3/models/train/train.rb
++++ b/part_3/models/train/train.rb
+@@ -9,7 +9,7 @@ class Train
+   attr_reader :type
+   attr_writer :trains
+ 
+-  @@trains = {}
++  @trains = {}
+   TRAIN_NUMBER = /^[a-z0-9]{3}-?[a-z0-9]{2}$/i.freeze
+ 
+   def initialize(number, type)
+@@ -18,16 +18,16 @@ class Train
+     @carriages = []
+     @speed = 0
+     validate!
+-    @@trains[number] = self
++    Train.all[number] = self
+     register_instance
+   end
+ 
+   def self.find(number)
+-    @@trains[number]
++    @trains[number]
+   end
+ 
+   def self.all
+-    @@trains
++    @trains
+   end
+ 
+   def stop
+@@ -75,10 +75,8 @@ class Train
+ 
+     station_index = route.stations.index(station)
+     puts "Now the train is at the station #{station.name}."
+-    puts "Previous station - #{route.stations[station_index - 1].name}." if station_index_zero_check(station_index)
+-    if station_index_route_size(station_index, route.station.size)
+-      puts "Next - #{route.stations[station_index + 1].name}."
+-    end
++    puts "Previous station - #{route.stations[station_index - 1].name}." unless station_index.zero?
++    puts "Next - #{route.stations[station_index + 1].name}." if station_index != route.stations.size - 1
+   rescue RuntimeError => e
+     puts "Error: #{e.message}"
+   end
+@@ -88,12 +86,4 @@ class Train
+ 
+     @carriages.each(&block)
+   end
+-
+-  def station_index_zero_check(station_index)
+-    station_index
+-  end
+-
+-  def station_index_route_size(station_index, size)
+-    station_index != size - 1
+-  end
+ end
+diff --git a/part_3/services/train/train_builder_service.rb b/part_3/services/train/train_builder_service.rb
+index f585fe5..8e08b03 100644
+--- a/part_3/services/train/train_builder_service.rb
++++ b/part_3/services/train/train_builder_service.rb
+@@ -2,7 +2,7 @@
+ 
+ class TrainBuilder
+   def self.create
+-    puts 'What number?'
++    puts 'What number?(in format xxx-xx)'
+     @number = gets.chomp
+     puts "Train #{@number} already exists" while Train.find(@number)
+ 
+-- 
+2.25.1
+
