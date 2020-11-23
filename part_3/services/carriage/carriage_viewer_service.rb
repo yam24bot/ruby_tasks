@@ -8,7 +8,7 @@ class CarriageViewer
       safety.check_created_train
 
       enter_train_number
-      safety.check_train_number(@train)
+      safety.check_train_number(train)
 
       carriage_output
     rescue RuntimeError => e
@@ -22,10 +22,13 @@ class CarriageViewer
     end
 
     def carriage_output
-      carriage_number = 0
-      @train.iterate_carriages do |carriage|
-        puts "№#{carriage_number += 1} #{@train.type} free #{carriage.free}, busy #{carriage.filled}"
+      train.iterate_carriages.with_index do |carriage, carriage_number|
+        puts "№#{carriage_number += 1} #{train.type} free #{carriage.free!}, busy #{carriage.filled}"
       end
+    end
+
+    def train
+      @train
     end
   end
 end

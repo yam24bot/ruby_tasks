@@ -11,8 +11,8 @@ class CarriageAddon
 
       enter_train_number
 
-      safety.check_train_number(@train)
-      carriage_size(@train.type)
+      safety.check_train_number(train)
+      carriage_size(train.type)
 
       connect_carriage
     rescue RuntimeError => e
@@ -38,7 +38,11 @@ class CarriageAddon
     end
 
     def connect_carriage
-      @train.add_carriage(CARRIAGE_TYPES[@train.type].new(@size))
+      train.add_carriage(CARRIAGE_TYPES[train.type].new(@size))
+    end
+
+    def train
+      @train
     end
   end
 end

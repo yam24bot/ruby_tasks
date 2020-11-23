@@ -3,16 +3,19 @@
 class TrainMover
   class << self
     def move
-      raise 'First you need to create a train' if Train.all.empty?
-      raise 'First you need to create a station' if Station.all.empty?
+      safety = TrainSafety.new(self)
+
+      safety.check_train
+
+      safety.check_station
 
       check_number
-      raise 'There is no train with this number' if @train.nil?
+      raise 'There is no train with this number' if train.nil?
 
       check_station
-      raise 'There is no such station' if @station.nil?
+      raise 'There is no such station' if station.nil?
 
-      @station.get_train(@train)
+      station.get_train(train)
     rescue RuntimeError => e
       puts "Error: #{e.message}"
     end
@@ -27,6 +30,14 @@ class TrainMover
       puts 'Which station? (name)'
       name = gets.chomp
       @station = Station.all.detect { |stn| stn.name == name }
+    end
+
+    def station
+      @station
+    end
+
+    def train
+      @train
     end
   end
 end

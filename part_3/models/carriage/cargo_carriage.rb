@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CargoCarriage < Carriage
-  attr_reader :filled
+  attr_accessor :volume, :filled
 
   def initialize(volume)
     super()
@@ -10,12 +10,12 @@ class CargoCarriage < Carriage
   end
 
   def load(volume)
-    raise 'Already full' if volume + @filled > @volume
+    raise 'Already full' if volume + filled > volume
 
-    @filled += volume
+    filled += volume
   end
 
-  def free
-    @volume - @filled
+  def free!
+    volume - filled
   end
 end

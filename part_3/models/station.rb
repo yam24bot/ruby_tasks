@@ -20,6 +20,9 @@ class Station
     @stations
   end
 
+  def self.name_detect(name)
+    return Station.all.detect { |station_detect| station_detect.name == name }
+  end
   def get_train(train)
     raise "Train #{train.number} already on station #{name}" if @trains.include?(train)
 

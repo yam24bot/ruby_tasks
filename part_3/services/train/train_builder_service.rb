@@ -3,21 +3,29 @@
 class TrainBuilder
   class << self
     def create
-      puts 'What number?(in format xxx-xx)'
-      @number = gets.chomp
-      puts "Train #{@number} already exists" while Train.find(@number)
+      input_train
 
-      puts '1 - passenger, 2 - cargo'
-      choice = gets.chomp.to_i
-      raise 'The train is not created. Should have entered 1 or 2' unless [1, 2].include?(choice)
+      carriage_type
 
-      output(choice)
+      create_train(@choice)
     rescue RuntimeError => e
       puts "Error: #{e.message}"
       retry
     end
 
-    def output(choice)
+    def carriage_type
+      puts '1 - passenger, 2 - cargo'
+      @choice = gets.chomp.to_i
+      raise 'The train is not created. Should have entered 1 or 2' unless [1, 2].include?(@choice)
+    end
+
+    def input_train
+      puts 'What number?(in format xxx-xx)'
+      @number = gets.chomp
+      puts "Train #{@number} already exists" while Train.find(@number)
+    end
+
+    def create_train(choice)
       case choice
       when 1
         PassengerTrain.new(@number)

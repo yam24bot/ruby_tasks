@@ -11,20 +11,13 @@ class CarriageLoader
       carriage_number
       safety.check_carriages_on_train
 
-      cargo_size(@train.type)
+      cargo_size(train.type)
     rescue RuntimeError => e
       puts "Error: #{e.message}"
     end
 
     def cargo_size
-      case type
-      when 'cargo'
-        puts 'Enter cargo volume '
-        @train.carriages[@carriage_number - 1].load(gets.chomp.to_f)
-      when 'passenger'
-        @train.carriages[@carriage_number - 1].take_a_seat
-      end
-      puts 'Complete'
+      Train.carriage_cargo_size(train, @carriage_number)
     end
 
     def carriage_number
@@ -36,6 +29,10 @@ class CarriageLoader
       puts 'Enter train number'
       number = gets.chomp
       @train = Train.find(number)
+    end
+
+    def train
+      @train
     end
   end
 end

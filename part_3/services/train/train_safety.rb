@@ -22,4 +22,12 @@ class TrainSafety < SimpleDelegator
   def check_route_presence
     raise 'Route not established' if train.route.nil?
   end
+
+  def check_station
+    raise 'First you need to create a station' if Station.all.empty?
+  end
+
+  def check_train
+    raise 'First you need to create a train' if Train.all.empty?
+  end
 end
