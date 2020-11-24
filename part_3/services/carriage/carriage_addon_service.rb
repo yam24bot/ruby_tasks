@@ -4,6 +4,7 @@ CARRIAGE_TYPES = { 'cargo' => CargoCarriage, 'passenger' => PassengerCarriage }.
 
 class CarriageAddon
   class << self
+    attr_reader :train
     def add
       safety = CarriageSafety.new
 
@@ -19,6 +20,8 @@ class CarriageAddon
       puts "Error: #{e.message}"
       retry unless Train.all.empty?
     end
+
+    private
 
     def carriage_size(type)
       case type
@@ -39,10 +42,6 @@ class CarriageAddon
 
     def connect_carriage
       train.add_carriage(CARRIAGE_TYPES[train.type].new(@size))
-    end
-
-    def train
-      @train
     end
   end
 end

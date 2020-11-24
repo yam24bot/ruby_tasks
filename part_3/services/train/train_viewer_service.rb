@@ -2,6 +2,8 @@
 
 class TrainViewer
   class << self
+    attr_reader :station
+
     def list
       safety = TrainSafety.new(self)
       safety.check_station
@@ -14,6 +16,8 @@ class TrainViewer
     rescue RuntimeError => e
       puts "Error: #{e.message}"
     end
+
+    private
 
     def find_by_name
       puts 'Which one? (name)'
@@ -28,10 +32,6 @@ class TrainViewer
 
     def trains_on_station
       station.iterate_trains { |train| puts "№#{train.number} #{train.type} wagons #{train.carriages.count}" }
-    end
-
-    def station
-      @station
     end
   end
 end

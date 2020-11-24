@@ -2,6 +2,8 @@
 
 class TrainMover
   class << self
+    attr_reader :station, :train
+
     def move
       safety = TrainSafety.new(self)
 
@@ -20,6 +22,8 @@ class TrainMover
       puts "Error: #{e.message}"
     end
 
+    private
+
     def check_number
       puts 'Which train? (enter number)'
       number = gets.chomp
@@ -30,14 +34,6 @@ class TrainMover
       puts 'Which station? (name)'
       name = gets.chomp
       @station = Station.all.detect { |stn| stn.name == name }
-    end
-
-    def station
-      @station
-    end
-
-    def train
-      @train
     end
   end
 end

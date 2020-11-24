@@ -3,6 +3,8 @@
 class CarriageLoader
   class << self
     def load
+      attr_reader :train
+
       safety.check_created_train
 
       train_number
@@ -15,6 +17,8 @@ class CarriageLoader
     rescue RuntimeError => e
       puts "Error: #{e.message}"
     end
+
+    private
 
     def cargo_size
       Train.carriage_cargo_size(train, @carriage_number)
@@ -29,10 +33,6 @@ class CarriageLoader
       puts 'Enter train number'
       number = gets.chomp
       @train = Train.find(number)
-    end
-
-    def train
-      @train
     end
   end
 end

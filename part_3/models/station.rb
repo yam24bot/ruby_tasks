@@ -4,7 +4,7 @@ class Station
   include InstanceCounter
   include Validation
   @stations = []
-  attr_reader :name
+  attr_reader :name, :trains
 
   validate :name, :presence
 
@@ -20,9 +20,10 @@ class Station
     @stations
   end
 
-  def self.name_detect(name)
-    return Station.all.detect { |station_detect| station_detect.name == name }
+  def name_detect(name)
+    Station.all.detect { |station_detect| station_detect.name == name }
   end
+
   def get_train(train)
     raise "Train #{train.number} already on station #{name}" if @trains.include?(train)
 

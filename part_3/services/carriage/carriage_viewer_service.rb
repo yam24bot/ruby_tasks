@@ -2,6 +2,8 @@
 
 class CarriageViewer
   class << self
+    attr_reader :train
+
     def list
       safety = CarriageSafety.new
 
@@ -15,6 +17,8 @@ class CarriageViewer
       puts "Error: #{e.message}"
     end
 
+    private
+
     def enter_train_number
       puts 'Enter train number'
       number = gets.chomp
@@ -25,10 +29,6 @@ class CarriageViewer
       train.iterate_carriages.with_index do |carriage, carriage_number|
         puts "№#{carriage_number += 1} #{train.type} free #{carriage.free!}, busy #{carriage.filled}"
       end
-    end
-
-    def train
-      @train
     end
   end
 end

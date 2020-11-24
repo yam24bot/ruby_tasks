@@ -2,6 +2,7 @@
 
 class CarriageDestroyer
   class << self
+    attr_reader :train
     def destroy
       safety = CarriageSafety.new
 
@@ -17,14 +18,12 @@ class CarriageDestroyer
       puts "Error: #{e.message}"
     end
 
+    private
+
     def enter_train_number
       puts 'Enter train number'
       number = gets.chomp
       @train = Train.find(number)
-    end
-
-    def train
-      @train
     end
   end
 end

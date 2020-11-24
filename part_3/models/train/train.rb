@@ -69,7 +69,6 @@ class Train
     safety.check_route_presence
     safety.check_destination(station)
     safety.check_destination_presence(station)
-
     current_station.send_train(self)
     self.current_station = station
     current_station.get_train(self)
