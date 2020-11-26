@@ -16,8 +16,14 @@ class Station
     register_instance
   end
 
-  def self.all
-    @stations
+  class << self
+    def find(name)
+      @stations[name]
+    end
+
+    def all
+      @stations
+    end
   end
 
   def name_detect(name)
