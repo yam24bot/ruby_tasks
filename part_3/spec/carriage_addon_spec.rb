@@ -21,16 +21,4 @@ describe CarriageAddon do
     it 'find train number' do
       expect { train.find(number) }
     end
-  
-    context 'got size of' do
-      it 'passenger carriage' do
-        pry
-        expect(carriage_addon.carriage_size(type_passenger)).to eq(0)
-      end
-  
-      it 'cargo carriage' do
-        expect(carriage_addon.carriage_size(type_cargo)).to eq(0)
-      end
-    end
   end
-  

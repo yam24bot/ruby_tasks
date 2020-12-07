@@ -1,8 +1,8 @@
 require_relative '../main'
 
 describe Route do
-    let(:route) { Route.new('Kharkiv', 'Kiyv') }
-    let(:station) { Station.new('Poltava') }
+    let(:route) { Route.new('Kharkiv', 'Kiyv', 'Kharkiv-Kyiv') }
+    let(:station) { Station.new('Poltava', 1) }
   
     it 'add station' do
       expect { route.stations.insert(-2, station) }.to change { route.stations.count }.by(1)

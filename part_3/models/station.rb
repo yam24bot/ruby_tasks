@@ -4,28 +4,24 @@ class Station
   include InstanceCounter
   include Validation
   @stations = []
-  attr_reader :name, :trains, :number
+  attr_reader :name
 
   validate :name, :presence
 
-  def initialize(name, number)
-    @number = number.to_i
+  def initialize(name)
     @name = name
     @trains = []
     validate!
-    Station.all[number] = self
     self.class.all << self
     register_instance
   end
 
-  class << self
-    def find(number)
-      @stations[number]
-    end
+  def trains
+    @trains
+  end
 
-    def all
-      @stations
-    end
+  def self.all
+    @stations
   end
 
   def name_detect(name)
@@ -49,5 +45,11 @@ class Station
     raise 'There are no trains at the station' if @trains.empty?
 
     @trains.each(&block)
+  end
+
+  def find_station
+    puts 'Which one? (name)'
+    name = gets.chomp
+    @station = Station.all.detect { |station_detect| station_detect.name == name }
   end
 end
