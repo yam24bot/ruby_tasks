@@ -28,7 +28,7 @@ require_relative 'services/carriage/carriage_viewer_service'
 require_relative 'services/carriage/carriage_loader_service'
 require_relative 'services/carriage/carriage_safety'
 require_relative 'services/route/route_builder_service'
-require_relative 'services/route/route_viewer_service'
+require_relative 'services/route/routes_viewer_service'
 require_relative 'services/route/route_addon_service'
 
 

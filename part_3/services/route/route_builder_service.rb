@@ -7,7 +7,7 @@ class RouteBuilder
     first_station = Station.find(first_station_number)
     puts 'Enter number of last station'
     last_station_number = gets.chomp.to_i
-    last_station = Station.find(first_station_number)
+    last_station = Station.find(last_station_number)
     puts 'Enter name on this route'
     name = gets.chomp.to_s
     Route.new(first_station, last_station, name)

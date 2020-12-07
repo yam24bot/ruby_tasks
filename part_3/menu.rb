@@ -43,7 +43,7 @@ class MainMenu
       when 11
         RouteAddon.add
       when 12
-        RouteViewer.check
+        RoutesViewer.check
       when 13
         pry
       else
