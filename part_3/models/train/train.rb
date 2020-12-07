@@ -25,6 +25,7 @@ class Train
 
   class << self
     def find(number)
+      pry
       @trains[number]
     end
 

@@ -4,21 +4,23 @@ class Station
   include InstanceCounter
   include Validation
   @stations = []
-  attr_reader :name, :trains
+  attr_reader :name, :trains, :number
 
   validate :name, :presence
 
-  def initialize(name)
+  def initialize(name, number)
+    @number = number.to_i
     @name = name
     @trains = []
     validate!
+    Station.all[number] = self
     self.class.all << self
     register_instance
   end
 
   class << self
-    def find(name)
-      @stations[name]
+    def find(number)
+      @stations[number]
     end
 
     def all

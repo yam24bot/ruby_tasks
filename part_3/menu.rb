@@ -39,7 +39,7 @@ class MainMenu
       when 9
         CarriageLoader.load
       when 10
-        RouteBuiler.create
+        RouteBuilder.create
       when 11
         RouteAddon.add
       when 12
