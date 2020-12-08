@@ -16,7 +16,8 @@ describe Train do
     expect { train.remove_carriage(carriage) }.to change { train.carriages.count }.by(-1)
   end
 
-  it 'find train' do
-    expect { train.find('111-11') }
+  it 'find train number' do
+    train
+    expect(described_class.find('111-11')).to eq(train)
   end
 end

@@ -16,6 +16,6 @@ describe Station do
 
   it 'send a train' do
     station.get_train(train)
-    expect(station.trains.delete(train))
+    expect { station.trains.delete(train) }.to change { station.trains.count }.by(-1)
   end
 end
