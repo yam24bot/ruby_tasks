@@ -23,7 +23,6 @@ class TrainViewer
       puts 'Which one? (name)'
       name = gets.chomp
       @station = Station.name_detect(name)
-      pry
     end
 
     def check_station

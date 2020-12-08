@@ -11,7 +11,6 @@ describe Station do
   end
 
   it 'detect names' do
-    pry
     expect(station.name_detect('Kharkiv').name).to eq('Kharkiv')
   end
 

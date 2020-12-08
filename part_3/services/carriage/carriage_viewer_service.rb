@@ -27,7 +27,7 @@ class CarriageViewer
 
     def carriage_output
       train.iterate_carriages.with_index do |carriage, carriage_number|
-        puts "№#{carriage_number += 1} #{train.type} free #{carriage.free!}, busy #{carriage.filled}"
+        puts "№#{carriage_number += 1} #{train.type} free #{carriage.free}, busy #{carriage.filled}"
       end
     end
   end

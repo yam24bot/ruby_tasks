@@ -7,6 +7,7 @@ class CarriageAddon
     attr_reader :train
 
     def add
+
       safety = CarriageSafety.new
 
       safety.check_created_train

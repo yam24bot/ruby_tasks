@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PassengerCarriage < Carriage
-  attr_accessor :filled, :seats_count
+  # attr_accessor :filled, :seats_count
 
   def initialize(seats_count)
     super()
@@ -10,12 +10,19 @@ class PassengerCarriage < Carriage
   end
 
   def take_a_seat
-    raise 'No free places' if filled == seats_count
-
-    filled += 1
+    raise 'No free places' if @filled == @seats_count
+    @filled += 1
   end
 
-  def free!
-    seats_count - filled
+  def free
+    @seats_count - @filled
+  end
+
+  def filled
+    @filled
+  end
+
+  def seats_count
+    @seats_count
   end
 end

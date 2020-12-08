@@ -25,7 +25,6 @@ class Train
 
   class << self
     def find(number)
-      pry
       @trains[number]
     end
 
@@ -39,17 +38,6 @@ class Train
     puts "To the train #{number} hitched a carriage."
   rescue RuntimeError => e
     puts "Ошибка: #{e.message}"
-  end
-
-  def carriage_cargo_size(train, carriage_number)
-    case type
-    when 'cargo'
-      puts 'Enter cargo volume '
-      return train.carriages[carriage_number - 1].load(gets.chomp.to_f)
-    when 'passenger'
-      return train.carriages[carriage_number - 1].take_a_seat
-    end
-    puts 'Complete'
   end
 
   def remove_carriage(carriage)

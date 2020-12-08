@@ -13,7 +13,7 @@ class CarriageSafety
     raise 'This train already has no wagons' if train.carriages.empty?
   end
 
-  def check_carriages_on_train
-    raise 'There is no such carriage on the train' if @carriage_number > @train.cariages.size
+  def check_carriages_on_train(carriage_number, train)
+    raise 'There is no such carriage on the train' if carriage_number > train.carriages.size
   end
 end
