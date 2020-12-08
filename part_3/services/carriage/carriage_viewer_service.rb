@@ -26,8 +26,8 @@ class CarriageViewer
     end
 
     def carriage_output
-      train.iterate_carriages.with_index do |carriage, carriage_number|
-        puts "№#{carriage_number += 1} #{train.type} free #{carriage.free}, busy #{carriage.filled}"
+      train.carriages.to_enum.with_index do |carriage, index|
+        puts "№#{index += 1} #{train.type} free #{carriage.free}, busy #{carriage.filled}"
       end
     end
   end
