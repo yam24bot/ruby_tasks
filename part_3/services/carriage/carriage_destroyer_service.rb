@@ -3,6 +3,7 @@
 class CarriageDestroyer
   class << self
     attr_reader :train
+
     def destroy
       safety = CarriageSafety.new
 

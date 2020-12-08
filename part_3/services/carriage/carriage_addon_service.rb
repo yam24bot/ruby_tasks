@@ -5,6 +5,7 @@ CARRIAGE_TYPES = { 'cargo' => CargoCarriage, 'passenger' => PassengerCarriage }.
 class CarriageAddon
   class << self
     attr_reader :train
+
     def add
       safety = CarriageSafety.new
 

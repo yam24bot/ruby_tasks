@@ -3,6 +3,7 @@
 class RouteAddon
   class << self
     attr_reader :station, :route
+
     def add
       route_name
 

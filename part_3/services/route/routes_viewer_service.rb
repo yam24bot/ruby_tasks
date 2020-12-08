@@ -14,11 +14,9 @@ class RoutesViewer
     private
 
     def check_routes
-      if Route.all.count == 0
-        raise "There is no route. Please, add new route to see routes in this row"
-      end
+      raise 'There is no route. Please, add new route to see routes in this row' if Route.all.count.zero?
     end
-    
+
     def all_routes
       Route.all.each do |name, value|
         puts "===\nRoute named #{name}\n==="
@@ -26,7 +24,7 @@ class RoutesViewer
         value.stations.each do |station|
           puts station.name
         end
-        puts "-----"
+        puts '-----'
       end
     end
   end
