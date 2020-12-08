@@ -11,6 +11,7 @@ class PassengerCarriage < Carriage
 
   def take_a_seat
     raise 'No free places' if filled == seats_count
+
     @filled += 1
   end
 

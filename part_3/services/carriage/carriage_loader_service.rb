@@ -48,6 +48,5 @@ class CarriageLoader
       puts 'Complete'
       pry
     end
-
   end
 end
