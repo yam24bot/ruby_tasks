@@ -46,7 +46,6 @@ class CarriageLoader
         train.carriages[@carriage_number - 1].take_a_seat
       end
       puts 'Complete'
-      pry
     end
   end
 end

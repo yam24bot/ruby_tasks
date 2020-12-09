@@ -76,8 +76,12 @@ class Train
     puts "Error: #{e.message}"
   end
 
-  def iterate_carriages(&block)
-    @carriages.each(&block)
+  def iterate_carriages(&arg)
+    if !block_given?
+      @carriages.each(&arg)
+    else
+      @carriages.to_enum(&arg)
+    end
   end
 
   def current_station
