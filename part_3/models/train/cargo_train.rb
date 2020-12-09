@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CargoTrain < Train
   validate :number, :presence
   validate :number, :format, TRAIN_NUMBER
@@ -6,10 +8,9 @@ class CargoTrain < Train
   end
 
   def add_carriage(carriage)
-    unless carriage.instance_of?(CargoCarriage)
-      raise 'Only freight wagons can be coupled to a freight train'
-    end
-    super(carriage)
+    raise 'Only freight wagons can be coupled to a freight train' unless carriage.instance_of?(CargoCarriage)
+
+    super
   rescue RuntimeError => e
     puts "Error: #{e.message}"
   end

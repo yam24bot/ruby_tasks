@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Validation
   def self.included(base)
     base.extend ClassMethods
@@ -16,13 +18,13 @@ module Validation
 
   module InstanceMethods
     def validate!
-      self.class.checks.each { |val| self.send val[1].to_sym, instance_variable_get("@#{val[0]}".to_sym), val[2] }
+      self.class.checks.each { |val| send val[1].to_sym, instance_variable_get("@#{val[0]}".to_sym), val[2] }
     end
 
     def valid?
       validate!
       true
-    rescue
+    rescue StandardError
       false
     end
 
@@ -37,7 +39,7 @@ module Validation
     end
 
     def type(value, options)
-      raise 'Class mismatch' if value.class == options
+      raise 'Class mismatch' if value.instance_of?(options)
     end
   end
 end

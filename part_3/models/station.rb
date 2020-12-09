@@ -1,24 +1,36 @@
+# frozen_string_literal: true
+
 class Station
   include InstanceCounter
   include Validation
-  @@stations = []
+  @stations = []
   attr_reader :name
+
   validate :name, :presence
 
   def initialize(name)
     @name = name
     @trains = []
     validate!
-    @@stations << self
+    self.class.all << self
     register_instance
   end
 
+  def trains
+    @trains
+  end
+
   def self.all
-    @@stations
+    @stations
+  end
+
+  def name_detect(name)
+    Station.all.detect { |station_detect| station_detect.name == name }
   end
 
   def get_train(train)
     raise "Train #{train.number} already on station #{name}" if @trains.include?(train)
+
     @trains << train
     puts "On station #{name} train #{train.number} arrived"
   end
@@ -29,9 +41,15 @@ class Station
     puts "From station #{name} train departed #{train.number}"
   end
 
-  def iterate_trains
+  def iterate_trains(&block)
     raise 'There are no trains at the station' if @trains.empty?
-    @trains.each { |train| yield(train) }
+
+    @trains.each(&block)
   end
 
+  def find_station
+    puts 'Which one? (name)'
+    name = gets.chomp
+    @station = Station.all.detect { |station_detect| station_detect.name == name }
+  end
 end
